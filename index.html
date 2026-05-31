@@ -668,20 +668,27 @@
     const getSelected = (step, name) =>
       [...document.querySelectorAll(`#step${step} input[name="${name}"]:checked`)].map(i => readable(i.value)).join(', ') || '-';
 
-    const html = `
-<div style="font-family:monospace;font-size:14px;line-height:1.8;color:#222;">
-<b>NUOVA RICHIESTA — Social Hero Salute</b><br>
-<hr style="border:1px solid #ccc;">
-<b>Nome:</b> ${nome}<br>
-<b>Studio:</b> ${studio || '-'}<br>
-<b>Email:</b> ${email}<br>
-<b>Telefono:</b> ${tel || '-'}<br>
-<hr style="border:1px solid #ccc;">
-<b>Cosa stai cercando?</b><br>${getSelected(1, 'obiettivo')}<br><br>
-<b>Tipo di professionista?</b><br>${getSelected(2, 'professione')}<br><br>
-<b>Presenza digitale attuale?</b><br>${getSelected(3, 'presenza')}<br><br>
-<b>Budget mensile indicativo?</b><br>${getSelected(4, 'budget')}
-</div>`.trim();
+    const message = [
+      'NUOVA RICHIESTA - Social Hero Salute',
+      '------------------------------------',
+      'Nome:     ' + nome,
+      'Studio:   ' + (studio || '-'),
+      'Email:    ' + email,
+      'Telefono: ' + (tel || '-'),
+      '------------------------------------',
+      'Cosa stai cercando?',
+      '  ' + getSelected(1, 'obiettivo'),
+      '',
+      'Tipo di professionista?',
+      '  ' + getSelected(2, 'professione'),
+      '',
+      'Presenza digitale attuale?',
+      '  ' + getSelected(3, 'presenza'),
+      '',
+      'Budget mensile indicativo?',
+      '  ' + getSelected(4, 'budget'),
+      '------------------------------------'
+    ].join('\n');
 
     const btn = document.querySelector('#step5 .btn-next');
     btn.disabled = true; btn.textContent = 'Invio in corso…';
@@ -691,10 +698,10 @@
         method: 'POST', headers: {'Content-Type':'application/json', 'Accept':'application/json'},
         body: JSON.stringify({
           access_key: '5477270e-f037-405a-a802-438d7d51b1c7',
-          subject: `🏥 Nuova richiesta da ${nome} — ${studio || 'Sanitario'}`,
+          subject: `Nuova richiesta da ${nome} - ${studio || 'Sanitario'} [Social Hero]`,
           from_name: 'Social Hero Landing',
           email: email || 'noreply@socialhero.it',
-          html: html
+          message: message
         })
       });
     } catch(e) { console.warn('Form send error:', e); }
