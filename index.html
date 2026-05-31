@@ -658,28 +658,59 @@
     updateProgress(from-1);
   }
   async function submitForm() {
-    const nome = document.getElementById('f-nome').value.trim();
-    const email = document.getElementById('f-email').value.trim();
+    const nome   = document.getElementById('f-nome').value.trim();
+    const email  = document.getElementById('f-email').value.trim();
+    const studio = document.getElementById('f-studio').value.trim();
+    const tel    = document.getElementById('f-tel').value.trim();
     if (!nome || !email) { alert('Inserisci almeno nome e email.'); return; }
-    const answers = {};
-    document.querySelectorAll('#step1 input:checked, #step2 input:checked, #step3 input:checked, #step4 input:checked').forEach(inp => {
-      if (!answers[inp.name]) answers[inp.name] = [];
-      answers[inp.name].push(inp.value);
-    });
-    let body = `<strong>Nuova richiesta — Social Hero Salute</strong><br><br>`;
-    body += `<strong>Nome:</strong> ${nome}<br>`;
-    body += `<strong>Studio:</strong> ${document.getElementById('f-studio').value}<br>`;
-    body += `<strong>Email:</strong> ${email}<br>`;
-    body += `<strong>Telefono:</strong> ${document.getElementById('f-tel').value}<br><br>`;
-    for (const [k,vals] of Object.entries(answers)) {
-      body += `<strong>${labelMap[k]||k}:</strong> ${vals.map(v=>labelMap[v]||v).join(', ')}<br>`;
-    }
+
+    const readable = v => labelMap[v] || v;
+    const getSelected = (step, name) =>
+      [...document.querySelectorAll(`#step${step} input[name="${name}"]:checked`)].map(i => readable(i.value)).join(', ') || '-';
+
+    const body = `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NUOVA RICHIESTA — Social Hero Salute
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Nome:     ${nome}
+Studio:   ${studio || '-'}
+Email:    ${email}
+Telefono: ${tel || '-'}
+
+❓ Cosa stai cercando?
+   ${getSelected(1, 'obiettivo')}
+
+❓ Tipo di professionista?
+   ${getSelected(2, 'professione')}
+
+❓ Presenza digitale attuale?
+   ${getSelected(3, 'presenza')}
+
+❓ Budget mensile indicativo?
+   ${getSelected(4, 'budget')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━`.trim();
+
+    const btn = document.querySelector('#step5 .btn-next');
+    btn.disabled = true; btn.textContent = 'Invio in corso…';
+
     try {
-      await fetch('https://api.web3forms.com/submit', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ access_key: '5477270e-f037-405a-a802-438d7d51b1c7', subject: 'Nuova richiesta - Social Hero Salute', to: 'davide.matteoli89@gmail.com', html: body })
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST', headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+        body: JSON.stringify({
+          access_key: '5477270e-f037-405a-a802-438d7d51b1c7',
+          subject: `🏥 Nuova richiesta da ${nome} — ${studio || 'Sanitario'}`,
+          from_name: 'Social Hero Landing',
+          email: email,
+          message: body
+        })
       });
-    } catch(e) {}
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Errore invio');
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Invia →';
+      alert('Errore durante l\'invio. Riprova.'); return;
+    }
+
     document.getElementById('step5').classList.remove('active');
     document.getElementById('stepOk').classList.add('active');
     updateProgress(5);
